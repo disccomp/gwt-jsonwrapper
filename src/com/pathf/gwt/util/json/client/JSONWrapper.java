@@ -53,6 +53,14 @@ import java.util.Set;
  */
 public class JSONWrapper {
     private JSONValue value;
+	/**
+	 * private String[] keys  Stores the keys of the <code>JSONWrapper</code> Object on which the {@link #iterator()} method has been called.
+	 */
+	private String[]  keys;
+	/**
+	 * private String[] index  Stores the current index position of the <code>JSONWrapper</code> Object on which the {@link #iterator()} method has been called.
+	 */
+	private Integer index;
 
     /**
      * Creates a <code>JSONWrapper</code> object from the supplied <code>JSONValue</code> argument.
@@ -70,6 +78,141 @@ public class JSONWrapper {
     public JSONValue getValue() {
         return value;
     }
+
+	/**
+	 * Returns an iterable <code>JSONWrapper</code> wrapped <code>JSONValue</code> using {@link #hasNext()}  and {@link #next()}, or <code>INVALID</code> if the wrapped value is not an array or if the index is out of bounds.
+	 * @return An iterable <code>JSONWrapper</code> wrapped <code>JSONValue</code>, <code>JSONWrapper</code> wrapped <code>JSONValue</code>, <code>INVALID</code> if the
+	 * wrapped value is not an array or if the index is out of bounds.
+	 * @see #hasNext()
+	 * @see #next()
+	 * @see #getKeys()
+	 * @see #INVALID
+	 */
+	public JSONWrapper iterator(){
+
+		_iterator();
+		if(index == -1){
+			return this;
+		}else{
+			return null;
+		}
+	}
+
+	private void _iterator(){
+		JSONArray arr = value.isArray();
+		if( arr != null){
+			keys = new String[arr.size()];
+			index = -1;			
+		}
+		JSONObject obj = value.isObject();        
+		if( obj != null){
+			keys = obj.keySet().toArray(new String[0]);
+			index = -1;			
+		}
+	}
+
+	/**
+	 * @return Whether there are any more keys to iterate over
+	 */
+	public boolean hasNext(){    	
+		try {
+			boolean returnVal = index < keys.length - 1;
+			return returnVal;
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+
+	}
+
+	/**
+	 * @return A <code>JSONWrapper</code> wrapped <code>JSONValue</code>, <code>INVALID</code> if the
+	 * wrapped value is not an array or if the index is out of bounds.
+	 */
+	public JSONWrapper next(){
+		if(!hasNext()){return null;}
+
+		if(value.isArray()!=null){
+			return get(++index);
+		}
+		if(value.isObject()!=null){
+			return get(keys[++index]);
+		}
+
+		return INVALID;
+	}
+
+	/**
+	 * @return The current {@link #index} (Not the current {@link #keys key}) of the <code>JSONWrapper</code> Object on which the {@link #iterator()} method has been called. 
+	 * @see #getKeys()
+	 */
+	public Integer getIndex() {
+		return index;
+	}
+
+	/**
+	 * @return The Current key
+	 */
+	public String getKey() {
+		return keys[index];
+	}
+
+	/**
+	 * @return String[] of an Object's keys
+	 */
+	public String[] getKeys() {
+		return keys;
+	}
+	/**
+	 * @return String[] of a JSONValue
+	 */
+	public String[] getStringArray(){
+
+		_iterator();//Make self iterable
+
+		String[] returnVal = new String[size()];
+		while(hasNext()){			 
+			returnVal[getIndex()+1] = next().stringValue();
+		}
+
+		return returnVal;
+	}
+	public JSONWrapper last(){
+		if (value == null) {
+			return INVALID;
+		}
+
+		if(value.isArray() != null){
+			return get(value.isArray().size() - 1);
+		}
+
+		if(value.isObject() != null){
+			Set<String> keys = value.isObject().keySet();
+			String lastkey = (String) keys.toArray() [keys.size() - 1];
+			return get(lastkey);
+		}else{
+			return INVALID;
+		}
+	}
+
+	public JSONWrapper first(){
+		if (value == null) {
+			return INVALID;
+		}
+
+		if(value.isArray() != null){
+			return get(0);
+		}
+
+		if(value.isObject() != null){
+			Set<String> keys = value.isObject().keySet();
+			String firstkey = (String) keys.toArray() [0];
+			return get(firstkey);
+		}else{
+			return INVALID;
+		}
+	}
 
     /**
      * Constant value that represents an invalid <code>JSONValue</code> value.
